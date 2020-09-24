@@ -1,5 +1,6 @@
 CC=gcc
 CFLAGS= -Wall -g -O -fPIC
+CFLAGS_EXE= -Wall -g -O3
 OBJ = sieve.o
 
 %.o: %.c
@@ -8,9 +9,12 @@ OBJ = sieve.o
 sieve.so: $(OBJ)
 	$(LINK.c) -shared $^ -o $@
 
-all: sieve.so
+sieve: $(OBJ) main.o
+	$(CC) -o $@ $^ $(CFLAGS_EXE)
+
+all: sieve sieve.so
 
 clean:
-	rm *.o *.so
+	rm *.o *.so sieve
 
 .PHONY: all clean
