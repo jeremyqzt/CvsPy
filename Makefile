@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -Wall -g -O -fPIC
-CFLAGS_EXE= -Wall -g -O3
+CFLAGS_EXE= -Wall -g -O3 -lm
 OBJ = sieve.o
 
 %.o: %.c
