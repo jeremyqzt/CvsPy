@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -Wall -g -O -fPIC
+CFLAGS= -Wall -g -O3 -fPIC
 CFLAGS_EXE= -Wall -g -O3 -lm
 OMP_FALGS= -fopenmp -lgomp
 OBJ = sieve.o
