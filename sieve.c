@@ -1,16 +1,31 @@
 #include <math.h>
 #include <stdlib.h>
 
-int sieve(int limit){
-	int ret = 0;
-	int computationalLimit = floor(sqrt(limit));
+unsigned long sieve(long limit){
+	unsigned long ret = 0;
+	unsigned long computationalLimit = floor(sqrt(limit));
+	unsigned char *prime = malloc(limit + 1);
+	unsigned long i,j,k,l;
 
-	char *prime = malloc(limit + 1);
-
-	for (int i = 2; i < computationalLimit; i++){
-		
+	for (i = 0; i < limit; i++){
+		prime[i] = 1;
 	}
 
+	for (j = 2; j < computationalLimit; j++){
+		printf("Currently %lu, isPrime: %hhu \n", j, prime[j]);
+		if (prime[j] && j * j < limit){
+			for (k = j * j; k <= limit; k += j){
+				prime[k] = 0;
+			}
+		}
+	}
+
+	for (l = 0; l < limit; l++){
+		ret += prime[l];
+	}
+
+
 	free(prime);
-	return ret;
+	//0, 1 are not primes
+	return ret - 2;
 }

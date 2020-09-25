@@ -1,1 +1,1 @@
-int sieve(int limit);
+unsigned long sieve(int limit);
