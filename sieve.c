@@ -12,7 +12,6 @@ unsigned long sieve(long limit){
 	}
 
 	for (j = 2; j < computationalLimit; j++){
-		printf("Currently %lu, isPrime: %hhu \n", j, prime[j]);
 		if (prime[j] && j * j < limit){
 			for (k = j * j; k <= limit; k += j){
 				prime[k] = 0;
