@@ -7,17 +7,20 @@ unsigned long sieve(long limit){
 	unsigned char *prime = malloc(limit + 1);
 	unsigned long i,j,k,l;
 
+	#pragma omp parallel for
 	for (i = 0; i < limit; i++){
 		prime[i] = 1;
 	}
 
 	for (j = 2; j < computationalLimit; j++){
 		if (prime[j] && j * j < limit){
+			#pragma omp parallel for
 			for (k = j * j; k <= limit; k += j){
 				prime[k] = 0;
 			}
 		}
 	}
+
 
 	for (l = 0; l < limit; l++){
 		ret += prime[l];
