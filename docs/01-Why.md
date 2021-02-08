@@ -3,6 +3,7 @@
 Imagine this - we wrote the same program, both have similar lines of code but one has a hundredth (!!!) the execution time. This sounds impossible. Well I'm here to say its not and we'll explore it more in this article.
 
 ## Disclaimer
+I am writing this based on my perceived understanding of the subjects - It is possible (and likely) that I have gaps in my understanding and everything I write may not e 100% correct. Apologies in advance to the reader!
 
 ## My take on programming language evolution
 
@@ -31,7 +32,7 @@ For an interpreted language - many high level features are standard. High level 
 
 This setup is very optimal for rapid prototyping and feature development (And explains the rapidly rise in popularity of such languages)!
 
-With so many new features and great support - one might wonder why we still use languages like C where better alternatives like Python are available. The answer is speed - see some [benchmarks](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/python3-gcc.html)
+With so many new features and great support - one might wonder why we still use languages like C where better alternatives like Python are available. The answer is speed - see some [benchmarks for gcc compiled vs python interpreted](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/python3-gcc.html)
 
 ## Python Vs C
 
