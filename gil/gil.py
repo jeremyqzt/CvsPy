@@ -1,7 +1,8 @@
 from time import time
 from threading import Thread
-
+ThCount = 4
 maxCount = 50000000
+
 def count(amt):
     while amt:
         amt-=1
@@ -23,7 +24,6 @@ class ThreaderCounter(Thread):
 
 thStart = time()
 
-ThCount = 4
 threadArr = []
 for i in range(0,ThCount - 1):
     th = ThreaderCounter(round(maxCount/ThCount))
