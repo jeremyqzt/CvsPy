@@ -1,6 +1,6 @@
 from time import time
 from threading import Thread
-ThCount = 4
+ThCount = 2
 maxCount = 50000000
 
 def count(amt):
