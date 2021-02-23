@@ -1,0 +1,17 @@
+C time: 0.000082, Python time: 0.000279, for primes from 0 to 1000 (Speedup = 3.406977)
+C time: 0.000579, Python time: 0.002375, for primes from 0 to 10000 (Speedup = 4.098765)
+C time: 0.000991, Python time: 0.022721, for primes from 0 to 100000 (Speedup = 22.919432)
+C time: 0.002598, Python time: 0.244152, for primes from 0 to 1000000 (Speedup = 93.992382)
+C time: 0.020822, Python time: 2.755147, for primes from 0 to 10000000 (Speedup = 132.317192)
+C time: 0.178000, Python time: 8.586468, for primes from 0 to 30000000 (Speedup = 48.238653)
+C time: 0.358078, Python time: 14.475378, for primes from 0 to 50000000 (Speedup = 40.425263)
+C time: 0.540641, Python time: 20.541209, for primes from 0 to 70000000 (Speedup = 37.994204)
+C time: 0.819426, Python time: 30.074832, for primes from 0 to 100000000 (Speedup = 36.702302)
+C time: 2.717527, Python time: 92.664603, for primes from 0 to 300000000 (Speedup = 34.098866)
+C time: 4.718183, Python time: 157.030461, for primes from 0 to 500000000 (Speedup = 33.281976)
+C time: 9.799938, Python time: 323.484269, for primes from 0 to 1000000000 (Speedup = 33.008808)
+C time: 20.437651, Python time: 666.610642, for primes from 0 to 2000000000 (Speedup = 32.616794)
+
+4.9.0-8-rt-amd64
+
+nice --adjustment=19 python ./test.py

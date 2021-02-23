@@ -2,11 +2,11 @@
 
 Imagine this - we wrote the same program, both have similar lines of code but one has a hundredth (!!!) the execution time. This sounds impossible. Well I'm here to say its not and we'll explore it more in this article.
 
-## Disclaimer
+## Motivation and Disclaimer
 
-I am writing this based on my perceived understanding of the subjects - It is possible (and likely) that I have gaps in my understanding and everything I write may not be 100% correct.
+Most of what I write here is largely based on my experience. I used to work in a embedded systems role and developed real-time operating systems. I always had a craving to combine my past roles with the experiences here so I thought this article would be a great place to start!
 
-I will refer to `Python` and `C` alot in this article. I have some experience with both as I currently work with Python and have, in the past, worked with C for writing custom Linux distros. Again - my knowledge here isn't perfect pros/cons I speak of will only reflect my experiences.
+Since I am writing this based on my perceived understanding of the subjects - It is possible (and likely) that I have gaps in my understanding and everything I write may not be 100% correct.
 
 Apologies in advance to the reader!
 
@@ -32,7 +32,13 @@ Python is a fully interpreted language - the interpreter takes care of all trans
 
 ## The speed tradeoff
 
-As programming languages evolved, so too has the debugging tools and paradigms. Newer paradigms allows us to abstract complex models while newer and more powerful tools allows for deeper inspection into the state of a executing program. This, undoubtedly, improved development speed and the developer experience - but this gain isn't free, it is bundled with a rather significant performance penalty.
+As programming languages evolved, so too has the debugging tools and modelling paradigms.
+
+Newer paradigms allows us to imagine programs in a intuitive sense and the task became modelling the world rather than issuing sequential commands to a machine. I would say one of the results from this evolution is [Object-Oriented Programming](https://en.wikipedia.org/wiki/Object-oriented_programming). This format of programming lets us model the world as individual objects and allows use to think about `what a object can do` rather than `what the code must do`. This is great because programmers can do less mental gymnastics to get the end result they're after (With less bugs too).
+
+Concurrently, the tooling for programmers have also become more and more powerful - The goal for any tool is to give a full snapshot of the program's inner state. This can tell the debugger exactly what has gone wrong. For the most part, this has been accomplished, we have the likes of `gdb` and `breakpoints` that can pause execution and give us exactly what we're looking for.
+
+This is all great because programmers can do less mental gymnastics to get the end result they're after! But there is always a tradeoff - I think, in this case, the trade off is speed.
 
 [Here are some benchmarks for the curious.](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/python3-gcc.html).
 
@@ -92,13 +98,39 @@ Convention would tell us that the program should execute 4 times faster - with s
 How long (Threaded): 5.388963
 ```
 
-There is some random-ness to scheduling. I tried to minimize this by using a `RT-linux kernel` and both processes have a `nice` value of `20`.
+There is some random-ness to scheduling. I tried to minimize this by using a `RT-linux kernel` and both processes have a `nice` value of `19` (19 is the maximum).
+
+```
+// uname -r
+4.9.0-8-rt-amd64
+
+// Command to run
+nice --adjustment=19 python ./test.py
+```
 
 ## How to cheat and overcome the speed barrier
 
 Python provides a native way to link against `.so` from its `Ctypes` library, these are named `Dynamically Linked Libraries(DLLs)` and are free from the GIL. Multiprocessing in python is quite reliant of this behavior as a DLL can launch its own threads and leverage the performance gains.
 
 For interests sake, I've prepared a sample problem where we can explore this. There is a simple algorithm for finding prime numbers called the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes). I will implement the sieve in `C` using `openMP` for multiprocessing and also implement the same algorithm in Python and we can compare the difference. The code is in the appendix if there is any interest around it.
+
+## Results
+
+| Primes     | C Time    | Python Time | Speedup     |
+| ---------- | --------- | ----------- | ----------- |
+| 1000       | 0.000082  | 0.000279    | 3.402439024 |
+| 10000      | 0.000579  | 0.002375    | 4.101899827 |
+| 100000     | 0.000991  | 0.022721    | 22.92734612 |
+| 1000000    | 0.002598  | 0.244152    | 93.97690531 |
+| 10000000   | 0.020822  | 2.755147    | 132.3190376 |
+| 30000000   | 0.178     | 8.586468    | 48.23858427 |
+| 50000000   | 0.358078  | 14.475378   | 40.42520903 |
+| 70000000   | 0.540641  | 20.541209   | 37.99417543 |
+| 100000000  | 0.819426  | 30.074832   | 36.70231601 |
+| 300000000  | 2.717527  | 92.664603   | 34.09887114 |
+| 500000000  | 4.718183  | 157.030461  | 33.28197762 |
+| 1000000000 | 9.799938  | 323.484269  | 33.00880771 |
+| 2000000000 | 20.437651 | 666.610642  | 32.61679349 |
 
 ## Appendix
 
