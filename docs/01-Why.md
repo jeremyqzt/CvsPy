@@ -34,15 +34,25 @@ Python is a fully interpreted language - the interpreter takes care of all trans
 
 As programming languages evolved, so too has the debugging tools and modelling paradigms.
 
-Newer paradigms allows us to imagine programs in a intuitive sense and the task became modelling the world rather than issuing sequential commands to a machine. I would say one of the results from this evolution is [Object-Oriented Programming](https://en.wikipedia.org/wiki/Object-oriented_programming). This format of programming lets us model the world as individual objects and allows use to think about `what a object can do` rather than `what the code must do`. This is great because programmers can do less mental gymnastics to get the end result they're after (With less bugs too).
+Newer paradigms allows us to imagine programs in a intuitive sense and the task became modelling the world rather than issuing sequential commands to a machine. I would say one of the results from this evolution is [Object-Oriented Programming](https://en.wikipedia.org/wiki/Object-oriented_programming). This format of programming lets us model the world as individual objects and allows use to think about `what a object can do` rather than `what the code must do`. This is great because programmers can do less mental gymnastics to get the end result they're after (With less bugs too). Concurrently, the tooling for programmers have also become more and more powerful - The goal for any tool is to give a full snapshot of the program's inner state. This can tell the debugger exactly what has gone wrong. For the most part, this has been accomplished, we have the likes of `gdb` and `breakpoints` that can pause execution and give us exactly what we're looking for.
 
-Concurrently, the tooling for programmers have also become more and more powerful - The goal for any tool is to give a full snapshot of the program's inner state. This can tell the debugger exactly what has gone wrong. For the most part, this has been accomplished, we have the likes of `gdb` and `breakpoints` that can pause execution and give us exactly what we're looking for.
+All these features are really nice but they require additional overhead but they are not handled without cost. Below are 3 examples of where potential overhead can arise:
 
-This is all great because programmers can do less mental gymnastics to get the end result they're after! But there is always a tradeoff - I think, in this case, the trade off is speed.
+1.  To inspect the current state of a variable, it either must be in a CPU register or it must be fetched from memory and loaded into a register for the programmer to inspect it. Doing this may seem common place but these operations are actually very expensive and doing this `was` absolutely unfeasible until very recently - due to significant advancements in hardware.
+2.  To raise and catch exceptions. In a typical implementation, whenever a runtime occurs, the OS will send a `SIGTERM` to the application instructing shutdown but this behavior is not captured by the program and is instead handled by the runtime which means an abstraction layer must exist and this is akin to running 2 applications at once.
+3.  To support weak typing - Strong typing exists to manage memory blocks and to have predictability when loading variables into CPU registers a weakly typed language must prepare the variables before trying to store it in memory or loading it into a CPU register.
+
+What a high-level language gains in is ability to abstract, it looses the same amount in speed.
 
 [Here are some benchmarks for the curious.](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/python3-gcc.html).
 
-One of such examples is the `Global Interpreter Lock (GIL)` that is commonly seen in python implementations. This lock holds a `mutex` over the interpreter and is a [design decision](https://wiki.python.org/moin/GlobalInterpreterLock) that helped to abstract away race conditions. We can write a simple application to illustrate this. Consider the following program that counts down from five million.
+## An example of the tradeoff
+
+A prominent example of the speed tradeoff is the `Global Interpreter Lock (GIL)` that is commonly seen in python implementations (i.e. `Cpython`).
+
+THe purpose of this lock is to hold a mutually exclusive (mutex) lock over the python intepreter and is a active [design decision](https://wiki.python.org/moin/GlobalInterpreterLock). This has undoubtadly helped the language to be as user-friendly as it is but is definitely a important `implementation note`.
+
+We can write a simple application to illustrate this. Consider the following program that counts down from five million.
 
 ```
 from time import time
@@ -98,7 +108,7 @@ Convention would tell us that the program should execute 4 times faster - with s
 How long (Threaded): 5.388963
 ```
 
-There is some random-ness to scheduling. I tried to minimize this by using a `RT-linux kernel` and both processes have a `nice` value of `19` (19 is the maximum).
+There is some random-ness to scheduling. I tried to minimize this by using a `RT-linux kernel` and both processes have a `nice` value of `19` (19 is the maximum). Below are some of the information aboiut my system setup.
 
 ```
 // uname -r
@@ -108,9 +118,9 @@ There is some random-ness to scheduling. I tried to minimize this by using a `RT
 nice --adjustment=19 python ./test.py
 ```
 
-## How to cheat and overcome the speed barrier
+## Merging high and low
 
-Python provides a native way to link against `.so` from its `Ctypes` library, these are named `Dynamically Linked Libraries(DLLs)` and are free from the GIL. Multiprocessing in python is quite reliant of this behavior as a DLL can launch its own threads and leverage the performance gains.
+Python provides a native way to link against object files (`.so` or `Shared Object`) from its `Ctypes` library, these are named `Dynamically Linked Libraries(DLLs)` and are free from the GIL because python is not doing the `interpreting` of the code. Multiprocessing in python is quite reliant of this behavior as a DLL can launch its own threads and leverage the performance gains. Some of the more notable libraries (like `numpy`) leverage this!
 
 For interests sake, I've prepared a sample problem where we can explore this. There is a simple algorithm for finding prime numbers called the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes). I will implement the sieve in `C` using `openMP` for multiprocessing and also implement the same algorithm in Python and we can compare the difference. The code is in the appendix if there is any interest around it.
 
@@ -131,6 +141,24 @@ For interests sake, I've prepared a sample problem where we can explore this. Th
 | 500000000  | 4.718183  | 157.030461  | 33.28197762 |
 | 1000000000 | 9.799938  | 323.484269  | 33.00880771 |
 | 2000000000 | 20.437651 | 666.610642  | 32.61679349 |
+
+## Conclusions
+
+From the above results, we can see that the multi-processed version is atleast 30 times faster at scale and in the most favourable result (10000000 primes), it was 132 times faster. With a more pronounced hardware setup, this disparity can be pushed even higher.
+
+With this conclusion - one might wonder why we use high level languages at all - the speed tradeoff is so massive! The answer is quite simple - because execution speed is not the only important factor!
+
+The python version of the sieve took me less than 10 minutes to write and (in all likelihood) has less bugs. I never had to worry about the `OMP` threads colliding or how to get everything to compile! In many cases, development speed and developmental scalability are even more important the the final execution speed.
+
+The purposes of this article was just to illustrate the design decisions that certain languages and to showcase the `Ctypes` feature of python (Which I found very cool) - and definitely not an attempt to push everyone towards lower-level languages!
+
+## Applications
+
+Given the speedups, I think there is some value in using this _somewhere_.
+
+The most common application is a small, self-contained library that is easy to maintain. The reason to structure it like so is because maintain 2 languages is not easy and potentially very messy. Developing a small library with a self contained interface is the best way to hide away the complexities while leveraging the speedup!
+
+Given the above reasoning - I would like to request some help from the reader for Part 2. Where do you think we can make a small, self-contained library to offload a calculation intensive task?
 
 ## Appendix
 
