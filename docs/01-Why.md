@@ -1,26 +1,24 @@
-# A unorthodox way to massively program execution speed
+# The Speed Tradeoff
 
-Imagine this - we wrote the same program, both have similar lines of code but one has a hundredth (!!!) the execution time. This sounds impossible. Well I'm here to say its not and we'll explore it more in this article.
+Imagine 2 sets of source code - both are similar in functionality, line count, and complexity but one has a 100x speedup over the other. This sounds pretty good right? If you would like to see how, read on!
 
 ## Motivation and Disclaimer
 
-Most of what I write here is largely based on my experience. I used to work in a embedded systems role and developed real-time operating systems. I always had a craving to combine my past roles with the experiences here so I thought this article would be a great place to start!
+Most of what I write here is largely based on my experience. I have always craved lower level but have always preferred to work on the high level and thought this article would be a good bridge between the two.
 
 Since I am writing this based on my perceived understanding of the subjects - It is possible (and likely) that I have gaps in my understanding and everything I write may not be 100% correct.
 
 Apologies in advance to the reader!
 
+## Introduction
+
+I definintely cheated a little bit when I wrote the heading - writing the same program with similar line counts/complexity doesn't mean we used the same developments tools. For this article, I will make a comparison between `C` and `Python` to show the advantages and disadvantages of each and explain how we can get massive speedups in execution time. At a later time, I hope to write a part 2 - to explore how we can integrate this into a niche area of our code.
+
 ## My take on programming language evolution
 
-I cheated a little bit when I wrote the introduction - writing the same program with similar line counts doesn't mean we used the same developments tools. For the rest of the article, I will make a comparison between C and Python to show the advantages and disadvantages of each and explain how we can get massive speedups in execution time. At a later time, I will write a part 2 - to explore how we can integrate this into a niche area of our code.
+Before programming languages became (somewhat) standardized, each hardware target had its unique way to develop and run applications. CPUs supported their own instruction sets and everything was a mess! This, naturally, was difficult to work with.
 
-I'm sure we're all aware the differences between compiled and interpreted but in case we forgot:
-
-- A compiled language must be translated into a binary of machine code before it can be ran
-
-- A interpreted language can be compiled 'Just-In-Time' for it to be ran, eliminating the compilation step
-
-Before programming languages became (somewhat) standardized, each hardware target had its unique way to program and run. This, naturally, was difficult to work with and the advent of the `C` language, the motto of [write once, compile anywhere](https://en.wikipedia.org/wiki/Write_once,_compile_anywhere) became the dominate way to appraoch programming.
+We first had assembly and later came the advent of the `C` language, the motto of [write once, compile anywhere](https://en.wikipedia.org/wiki/Write_once,_compile_anywhere) became the dominate way to appraoch programming.
 
 As software and hardware both became more complex, compilers (especially cross-compilers) diverged and it became extremely difficult to maintain the `compile anywhere` part of the motto. As programmers - we needed a solution and quickly came to the reliable concept of `abstraction`. The compile process was abstracted and we got the motto of [write once, run anywhere](https://en.wikipedia.org/wiki/Write_once,_run_anywhere) - this gave rise to `Java`.
 
