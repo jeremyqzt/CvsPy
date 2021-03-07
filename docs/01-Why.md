@@ -1,46 +1,44 @@
 # The Speed Tradeoff
 
-Imagine 2 sets of source code - both are similar in functionality, line count, and complexity but one has a 100x speedup over the other. This sounds pretty good right? If you would like to see how, read on!
+Application execution speed always ranks highly on the mind of programmers - a slow program is almost synonymous with a bad program because it will directly, and negatively, contribute to user experience. Whenever a new app or a feature is considered, we tend to do some complexity analysis on it to ensure that, on a `macro` scale, the code will perform reasonably well.
+
+Over time, we've gotten exceedingly good at both analyzing and implementing solid programs with low amounts of complexity. Our tools have also grown to support this - pieces of good, reusable code are made into libraries and mental models are abstracted into language features. This is awesome because it ensures that our users, as a aggregate, get an consistent experience that we can easily manage.
+
+On the same note, I would argue that we made tradeoffs along the way, to me, one of the most striking tradeoffs is performance at the `micro` scale.
+
+I (and probably everyone) always knew that languages offering higher levels of abstraction are slower than barebones languages but have never made comparison so I wanted to take this article as an opportunity to do a bit of research and determine a `ballpark` figure - and perhaps, through some integration, get some of it back.
 
 ## Motivation and Disclaimer
 
-Most of what I write here is largely based on my experience. I have always craved lower level but have always preferred to work on the high level and thought this article would be a good bridge between the two.
+Most of what I write here is largely based on my experience (and small amount of research). It is possible (and likely) that I have gaps in my understanding and everything I write may not be 100% correct.
 
-Since I am writing this based on my perceived understanding of the subjects - It is possible (and likely) that I have gaps in my understanding and everything I write may not be 100% correct.
-
-Apologies in advance to the reader!
+Apologies in advance to the reader! Please always feel free to reach out and correct me.
 
 ## Introduction
 
-I definintely cheated a little bit when I wrote the heading - writing the same program with similar line counts/complexity doesn't mean we used the same developments tools. For this article, I will try to make a comparison between `C` and `Python` to show the advantages and disadvantages of each and explain how we can get massive speedups in execution time. At a later time, I hope to write a part 2 - to explore how we can integrate this into a niche area of our code.
+For the comparision I referred to - I will try to compare `C` and `Python`. These 2 are the languages I'm most famaliar with and both have a fairly consistent popularity according to the [TIOBE Index](https://www.tiobe.com/tiobe-index/). `C` has largely reigned surpreme for the past 30-40 years while `Python` is quickly picking up steam. Since these 2 languages has their popularity height at different times, I think we can track the progress over the time. Since we also use `Python`, I can leverage some my learnings and try to integrate with a small aread of our code base in `part 2`.
 
 ## My take on programming language evolution
 
 Before programming languages became (somewhat) standardized, each hardware target had its unique way to develop and run applications. CPUs supported their own instruction sets and everything was a mess! This, naturally, was difficult to work with and we solved this with general-purpose programming languages. Some of the earlier languages included the likes of `Fortran` and `Cobol` (there are a few others) but these languages are generally not too popular nowadays and used used in specific applications.
 
-The `C` language arose a bit after (and took inspiration) from some of the earlier works. The advertised motto for `C` was [write once, compile anywhere](https://en.wikipedia.org/wiki/Write_once,_compile_anywhere). This meant that the compiler were platform specific and the source code was indifferent. This is a method of abstraction, most of the hard work of figuring out the required `assembly` was offloaded to the compiler and the programmer needed not to worry about the specifics. Some of my more experienced co-workers told me that - at the time of this, it was quite frowned upon due to the preceived loss of speed. The loss of speed was cited to have arose from removing unique optimizations that a programmer can tailor make. However, as time pressed onwards, the compiler got better and hardware become more powerful (and complex) - it became quite impractical to know the in-and-outs of a specifc hardware platform and we commonly accept the compiler produced code as the `optimal` solution. Due to this - `C` reigned surpreme as the high-level language of choice for many years.
+The `C` language arose a bit after (and took inspiration) from some of the earlier works. The advertised motto for `C` was [write once, compile anywhere](https://en.wikipedia.org/wiki/Write_once,_compile_anywhere). This meant that the compiler were platform specific and the source code was generic. This is a method of abstraction, most of the hard work of figuring out the required `assembly` was offloaded to the compiler and the programmer needed not to worry about the specifics. Some of my more experienced co-workers told me that - at the time of this, it was quite frowned upon due to the preceived loss of speed. The loss of speed was cited to have arose from removing unique optimizations that a programmer can tailor make. However, as time pressed onwards, the compiler got better and hardware become more powerful (and complex) - it became quite impractical to know the in-and-outs of a specifc hardware platform and we commonly accept the compiler produced code as the `optimal` solution. Due to this - `C` reigned surpreme as the high-level language of choice for many years.
 
-Eventually the complexity problem caught up and it became diffuclt to maintain cross platform support again - If there are any `C` developers in the audience, you may remember a code base littered with `#ifdef`s and doing some mental juggling to figure out the code path. Again, to solve this problem, programmers turned to abstraction and took away the runtime. `Java` is the notable example of this - it was widely advertised as [write once, run anywhere](https://en.wikipedia.org/wiki/Write_once,_run_anywhere)! This was accomplised by compiling to `Byte Code` and running it all under a common virtual machine (the `JVM`)! Coming from the `C` world, I was really surprised how well this worked, a `.jar` can be ran on almost any platform as long as the proper version of `Java` was installed.
+Eventually the complexity problem caught up and it became diffuclt to maintain cross platform support again - If there are any `C` developers in the audience, you may remember a code base littered with `#ifdef`s and doing some mental juggling to figure out the exact code path. Again, to solve this problem, programmers turned to abstraction and took away the runtime. `Java` is the notable example of this - it was widely advertised as [write once, run anywhere](https://en.wikipedia.org/wiki/Write_once,_run_anywhere)! This was accomplised by compiling to `Byte Code` and later `interpreting` it all under a common virtual machine (the `JVM`)!
 
-Java still maintained the compile process and this abstraction process has a small cost
+Coming from the `C` world, I was really surprised how well this worked, a `.jar` can be ran on almost any platform/OS as long as the proper version of `Java` was installed - Many of the `Java` based game clients of the 2000s were originally meant for windows but can be ran under a Linux system without recompiling - running `java --jar <name.jar>` worked just fine.
 
-We eventually took the `write once, run anywhere` further and arrived at many languages that fit the motto much better - a prime example is Python! While `C` and `Java` still dominate the industry, Python is quickly rising and is now a close third on the [TIOBE Index](https://www.tiobe.com/tiobe-index/).
+We eventually took the `write once, run anywhere` further and arrived at many languages that fit the motto much better - a prime example is Python! Python is a fully interpreted language - the compile process is no more and an interpreter takes care of all translations in a `Just in Time` manner. While `C` and `Java` still dominate the industry, Python is quickly rising and is now a close third on the [TIOBE Index](https://www.tiobe.com/tiobe-index/).
 
-Python is a fully interpreted language - the interpreter takes care of all translations and, for the most part, it delivers on the `write once and run anywhere` promise.
+This is largely where we are at now!
 
 ## The speed tradeoff
 
 As programming languages evolved, so too has the debugging tools and modelling paradigms.
 
-Newer paradigms allows us to imagine programs in a intuitive sense and the task became modelling the world rather than issuing sequential commands to a machine. I would say one of the results from this evolution is [Object-Oriented Programming](https://en.wikipedia.org/wiki/Object-oriented_programming). This format of programming lets us model the world as individual objects and allows use to think about `what a object can do` rather than `what the code must do`. This is great because programmers can do less mental gymnastics to get the end result they're after (With less bugs too). Concurrently, the tooling for programmers have also become more and more powerful - The goal for any tool is to give a full snapshot of the program's inner state. This can tell the debugger exactly what has gone wrong. For the most part, this has been accomplished, we have the likes of `gdb` and `breakpoints` that can pause execution and give us exactly what we're looking for.
+Newer paradigms allows us to imagine programs in a intuitive sense and the task became modelling the world rather than issuing sequential commands to a machine. I would say one of the results from this evolution is [Object-Oriented Programming](https://en.wikipedia.org/wiki/Object-oriented_programming). This format of programming lets us model the world as individual objects and allows use to think about `what a object can do` rather than `what the code must do`. This is great because programmers can do less mental gymnastics to get the end result they're after (With less bugs too). Concurrently, the tooling for programmers have also become more and more powerful - The goal for any tool is to give a full snapshot of the program's inner state. This can tell the developer exactly what has gone wrong. For the most part, this has evolved in tandem with our paradigms and have become important language features - comparision python 2s' breakpoint to python 3 is a night and day difference!
 
-All these features are really nice but they require additional overhead but they are not handled without cost. Below are 3 examples of where potential overhead can arise:
-
-1.  To inspect the current state of a variable, it either must be in a CPU register or it must be fetched from memory and loaded into a register for the programmer to inspect it. Doing this may seem common place but these operations are actually very expensive and doing this `was` absolutely unfeasible until very recently - due to significant advancements in hardware.
-2.  To raise and catch exceptions. In a typical implementation, whenever a runtime occurs, the OS will send a `SIGTERM` to the application instructing shutdown but this behavior is not captured by the program and is instead handled by the runtime which means an abstraction layer must exist and this is akin to running 2 applications at once.
-3.  To support weak typing - Strong typing exists to manage memory blocks and to have predictability when loading variables into CPU registers a weakly typed language must prepare the variables before trying to store it in memory or loading it into a CPU register.
-
-What a high-level language gains in is ability to abstract, it looses the same amount in speed.
+All these features are really nice but they require additional overhead but they are not handled without cost. What a high-level language gains in is ability to abstract, it looses the same amount in speed.
 
 [Here are some benchmarks for the curious.](https://benchmarksgame-team.pages.debian.net/benchmarksgame/fastest/python3-gcc.html).
 
@@ -48,9 +46,9 @@ What a high-level language gains in is ability to abstract, it looses the same a
 
 A prominent example of the speed tradeoff is the `Global Interpreter Lock (GIL)` that is commonly seen in python implementations (i.e. `Cpython`).
 
-THe purpose of this lock is to hold a mutually exclusive (mutex) lock over the python intepreter and is a active [design decision](https://wiki.python.org/moin/GlobalInterpreterLock). This has undoubtadly helped the language to be as user-friendly as it is but is definitely a important `implementation note`.
+THe purpose of this lock is to hold a mutually exclusive (mutex) lock over the python intepreter and is a active [design decision](https://wiki.python.org/moin/GlobalInterpreterLock). This has undoubtadly helped the language to be as user-friendly as it is and also likely contributed to its rapid evolution! At the same time, it is definitely a important implementation note to consider!
 
-We can write a simple application to illustrate this. Consider the following program that counts down from five million.
+We can write a simple application to illustrate how this lock works. Consider the following program that counts down from five million.
 
 ```
 from time import time
@@ -71,7 +69,7 @@ I can run this on my computer and get a execution time - in my case it was ~4.5 
 How long (Non-Threaded): 4.409004
 ```
 
-We can write a threaded version of the same program where we distribute the workload across 4 threads.
+We can write a threaded version of the same program where we distribute the workload across 4 threads (i.e. each thread counts down from 1.25 million).
 
 ```
 from time import time
@@ -100,7 +98,7 @@ thEnd = time()
 print("How long (Threaded): %f" % (thEnd-thStart))
 ```
 
-Convention would tell us that the program should execute 4 times faster - with some overhead to starting the threads but this isn't the case and the program takes almost 5.4 seconds to run.
+Convention would tell us that the program should execute 4 times faster - with some fixed overhead to start the threads. However, this isn't the case and the program takes almost 5.4 seconds to run!
 
 ```
 How long (Threaded): 5.388963
@@ -116,13 +114,17 @@ There is some random-ness to scheduling. I tried to minimize this by using a `RT
 nice --adjustment=19 python ./test.py
 ```
 
-## Merging high and low
+From this experiment, we get a sense that python code acquires the mutex when it needs to execute and threading generally does us no good! In fact, if we factor in thread startup time, it likely hurts the performance.
+
+## Bypassing the tradeoff
+
+This part is where I found the most interesting. Given that python was implemented using C, I had a feeling that we could intergrate the 2 somehow.
 
 Python provides a native way to link against object files (`.so` or `Shared Object`) from its `Ctypes` library, these are named `Dynamically Linked Libraries(DLLs)` and are free from the GIL because python is not doing the `interpreting` of the code. Multiprocessing in python is quite reliant of this behavior as a DLL can launch its own threads and leverage the performance gains. Some of the more notable libraries (like `numpy`) leverage this!
 
 For interests sake, I've prepared a sample problem where we can explore this. There is a simple algorithm for finding prime numbers called the [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes). I will implement the sieve in `C` using `openMP` for multiprocessing and also implement the same algorithm in Python and we can compare the difference. The code is in the appendix if there is any interest around it.
 
-## Results
+## Results and Conclusions
 
 | Primes     | C Time    | Python Time | Speedup     |
 | ---------- | --------- | ----------- | ----------- |
@@ -140,23 +142,17 @@ For interests sake, I've prepared a sample problem where we can explore this. Th
 | 1000000000 | 9.799938  | 323.484269  | 33.00880771 |
 | 2000000000 | 20.437651 | 666.610642  | 32.61679349 |
 
-## Conclusions
+From the above results, we can see that the multi-processed version is atleast 30 times faster at scale and in the most favourable result (10000000 primes), it was 132 times faster. With a more pronounced hardware setup (i.e. more CPU cores), this disparity can be pushed even higher.
 
-From the above results, we can see that the multi-processed version is atleast 30 times faster at scale and in the most favourable result (10000000 primes), it was 132 times faster. With a more pronounced hardware setup, this disparity can be pushed even higher.
-
-With this conclusion - one might wonder why we use high level languages at all - the speed tradeoff is so massive! The answer is quite simple - because execution speed is not the only important factor!
-
-The python version of the sieve took me less than 10 minutes to write and (in all likelihood) has less bugs. I never had to worry about the `OMP` threads colliding or how to get everything to compile! In many cases, development speed and developmental scalability are even more important the the final execution speed.
-
-The purposes of this article was just to illustrate the design decisions that certain languages and to showcase the `Ctypes` feature of python (Which I found very cool) - and definitely not an attempt to push everyone towards lower-level languages!
+So we have our answer to the initial query. Simpler langauges are significantly faster on the micro scale. With this conclusion - one might wonder why we use high level languages at all - the speed tradeoff is so massive! The answer is quite simple - because execution speed is not the only important factor. There are rarely times where we need all the primes up to 20million. Furthermore, the python version of the sieve took me less than 10 minutes to write and (in all likelihood) has less bugs. I never had to worry about the threads colliding or how to get everything to compile! In almost all cases, development speed and developmental scalability are even more important the the final execution speed of a single instance.
 
 ## Applications
 
 Given the speedups, I think there is some value in using this _somewhere_.
 
-The most common application is a small, self-contained library that is easy to maintain. The reason to structure it like so is because maintain 2 languages is not easy and potentially very messy. Developing a small library with a self contained interface is the best way to hide away the complexities while leveraging the speedup!
+The most common application is a small, self-contained library that is easy to maintain. The reason to structure it like so is because maintain 2 languages is not easy and potentially very messy. Developing a small library with a self contained interface is the best way to hide away the complexities while leveraging the speedup! As an example - Machine learning libraries such as `numpy` likely use this to crunch large data sets.
 
-Given the above reasoning - I would like to request some help from the reader for Part 2. Where do you think we can make a small, self-contained library to offload a calculation intensive task?
+Given the above - I would like to request some help from the reader for Part 2. Where do you think we can make a small, self-contained library to offload a calculation intensive task?
 
 ## Appendix
 
